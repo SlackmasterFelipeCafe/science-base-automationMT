@@ -1,4 +1,11 @@
-# science-base-automation
+# science-base-automationMT
+
+Cloned from user esturdivant-usgs (https://github.com/esturdivant-usgs) science-base-automation (https://github.com/esturdivant-usgs/science-base-automation)
+
+###Modified by Phil Brown to handle batch MT Data Uploads
+- **autoSB.py** Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
+- Last Modified 9/11
+
 __Automatically create and populate ScienceBase pages with metadata and data files.__ Given a ScienceBase (SB) landing page and a directory tree with data and metadata, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, and populates the SB pages from the data.
 
 ### Overall process
@@ -31,7 +38,7 @@ It is also possible for the script to automatically create the SB page from an X
 ### 3. Modify parameters.
 
 Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments.
-Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
+
 
 - Input variables that must be updated before running:
 	- useremail (SB username)
@@ -198,4 +205,5 @@ If a facet was created, a URL for direct download of the all files in the facets
 
 - Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
 
-Modified 9/11
+
+
