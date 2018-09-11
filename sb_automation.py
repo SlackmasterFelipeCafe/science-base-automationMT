@@ -6,6 +6,8 @@ sb_automation.py
 
 By: Emily Sturdivant, esturdivant@usgs.gov
 
+Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
+
 OVERVIEW: Script creates child pages that mimic the directory structure and
 populates the pages using a combination of fields from the landing page and the metadata.
 Directories within home must be named as desired for each child page.
@@ -94,13 +96,14 @@ if not sb.is_logged_in():
 # If there's no id_to_json.json file available, we need to create the subpage structure.
 if not update_subpages and not os.path.isfile(os.path.join(parentdir,'id_to_json.json')):
 	print("id_to_json.json file is not in parent directory, so we will perform update_subpages routine.")
-	update_subpages = True
-
+	update_subpages = True 
+	#update_subpages = False #PJB
+	
 # List XML files
 xmllist = glob.glob(os.path.join(parentdir, '**/*.xml'), recursive=True)
 
 if update_subpages:
-    dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)
+    dict_DIRtoID, dict_IDtoJSON, dict_PARtoCHILDS = setup_subparents(sb, parentdir, landing_id, xmllist, imagefile)#PJB must get xml name and insert here in place of parentdir - fixed in function
 else: # Import pre-created dictionaries if all SB pages exist
     with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
         dict_DIRtoID = json.load(f)
@@ -108,6 +111,7 @@ else: # Import pre-created dictionaries if all SB pages exist
         dict_IDtoJSON = json.load(f)
     with open(os.path.join(parentdir,'parentID_to_childrenIDs.txt'), 'rb') as f:
         dict_PARtoCHILDS = pickle.load(f)
+
 
 #%% Create and populate data pages
 """
@@ -131,6 +135,7 @@ if not "dict_DIRtoID" in locals():
 	with open(os.path.join(parentdir,'dir_to_id.json'), 'r') as f:
 		dict_DIRtoID = json.load(f)
 
+
 #%%
 # For each XML file in each directory, create a data page, revise the XML, and upload the data to the new page
 if verbose:
@@ -148,24 +153,33 @@ for xml_file in xmllist:
 			sb = pysb.SbSession(env=None).login(useremail, password)
 		except NameError:
 			sb = pysb.SbSession(env=None).loginc(useremail)
+
+		
+#%% Children made in 1. - PJB
 	# 1. GET VALUES from XML
 	dirname = os.path.basename(os.path.split(xml_file)[0])
-	parentid = dict_DIRtoID[dirname]
+	parentid = dict_DIRtoID[dirname] # leave old parent Id and do not use directory id PJB - will not nest children?
 	new_values['doi'] = dr_doi if 'dr_doi' in locals() else get_DOI_from_item(flexibly_get_item(sb, parentid))
 	# Get title of data by parsing XML
 	data_title = get_title_from_data(xml_file)
+
 	# Create (or find) data page based on title
-	data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose)
-	# If pubdate in new_values, set it as the date for the SB page
-	try:
-		data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
-	except:
-		pass
+	# We just want to use existing 'subpage' item here instaed of recreating another child named data_item >>-PJB->
+	# data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose)	
+	data_item = sb.get_item(parentid)  # Get existing item from ScienceBase >>-PJB->
+
+	
+		# If pubdate in new_values, set it as the date for the SB page
+	##try:
+		##data_item["dates"][0]["dateString"]= new_values['pubdate'] #FIXME add this to a function in a more generalized way?
+	##except:
+		##pass
+#%%
 	# 2. MAKE UPDATES
 	# Update XML
 	if update_XML:
 		# add SB UID to be updated in XML
-		new_values['child_id'] = data_item['id']
+		new_values['child_id'] = data_item['id'] 
 		# Look for browse graphic
 		searchstr = xml_file.split('.')[0].split('_meta')[0] + '*browse*'
 		try:
@@ -173,15 +187,17 @@ for xml_file in xmllist:
 			new_values['browse_file'] = browse_file.split('/')[-1]
 		except Exception as e:
 			print("We weren't able to upload a browse image for page {}. Exception reported as '{}'".format(dirname, e))
+
 		# Make the changes to the XML based on the new_values dictionary
-		update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
-		if "find_and_replace" in new_values:
-			find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
-		if verbose:
-			print("UPDATED XML: {}".format(xml_file))
+		##update_xml(xml_file, new_values, verbose=verbose) # new_values['pubdate']
+		##if "find_and_replace" in new_values:
+			##find_and_replace_from_dict(xml_file, new_values['find_and_replace'])
+		##if verbose:
+			##print("UPDATED XML: {}".format(xml_file))
+			
 	# Upload data to ScienceBase
 	if update_data:
-		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize
+		# Upload all files in dir that match basename of XML file. Record list of files that were not uploaded because they were above the threshold set by max_MBsize	
 		data_item, bigfiles1 = upload_files_matching_xml(sb, data_item, xml_file, max_MBsize=max_MBsize, replace=True, verbose=verbose)
 		if bigfiles1:
 			if not 'bigfiles' in locals():
@@ -202,7 +218,7 @@ for xml_file in xmllist:
 	# store values in dictionaries
 	dict_DIRtoID[xml_file] = data_item['id']
 	dict_IDtoJSON[data_item['id']] = data_item
-	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id'])
+	dict_PARtoCHILDS.setdefault(parentid, set()).add(data_item['id']) #Note this PJB
 
 #%% Pass down fields from parents to children
 print("\n---\nPassing down fields from parents to children...")
@@ -240,4 +256,4 @@ print('\n{}\nAll done! View the result at {}'.format(now_str, landing_link))
 if 'bigfiles' in locals():
 	if len(bigfiles) > 0:
 		print("These files were too large to upload so you'll need to use the large file uploader:")
-		print(*bigfiles, sep = "\n")
+		#print(*bigfiles, sep = "\n")
