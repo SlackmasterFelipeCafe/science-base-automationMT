@@ -5,6 +5,8 @@ autoSB.py
 By: Emily Sturdivant, esturdivant@usgs.gov
 Last modified: 1/10/17
 
+Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
+
 OVERVIEW: Functions used in sb_automation.py
 """
 #%% Import packages
@@ -483,7 +485,10 @@ def setup_subparents(sb, parentdir, landing_id, xmllist, imagefile, verbose=True
 	            dirpath_list.append(os.path.join(root, dirname))
 	            # for every directory, do the following:
 	            parent_id = dict_DIRtoID[root] # get ID for parent
-	            subpage = find_or_create_child(sb, parent_id, dirname, verbose=verbose) # get JSON for subpage based on parent ID and dirname
+	            
+	            data_title = get_title_from_data(xml_file) #Added get parent Metadata title for below >>-PJB->
+	            station_title = "Station_" + dirname
+	            subpage = find_or_create_child(sb, parent_id, station_title, verbose=verbose) # get JSON for subpage based on parent ID and dirname -- >>-PJB-> Changed 'dirname' to 'data_title' to create a parent with the title name from the metadata. Per Pauls request added station to dirname and changed child item name to this >>-PJB->
 	            if not imagefile == False:
 	                subpage = sb.upload_file_to_item(subpage, imagefile)
 	            # store values in dictionaries
@@ -520,8 +525,8 @@ def inherit_SBfields(sb, child_item, inheritedfields=['citation'], verbose=False
 				pass
 	child_item = sb.update_item(child_item)
 	return child_item
-
-def find_or_create_child(sb, parentid, child_title, verbose=False):
+	
+def find_or_create_child(sb, parentid, child_title, verbose=False ):  
 	# Find or create new child page
 	for child_id in sb.get_child_ids(parentid): # Check if child page already exists
 		child_item = sb.get_item(child_id)
@@ -549,6 +554,7 @@ def upload_data(sb, item, xml_file, replace=True, verbose=False):
 	dataname = xml_file.split('.')[0]
 	dataname = dataname.split('_meta')[0]
 	searchstr = dataname + '.*'
+	
 	up_files = glob.glob(searchstr)
 	# Upload all files pertaining to data to child page
 	if verbose:
@@ -563,7 +569,7 @@ def replace_files_by_ext(sb, parentdir, dict_DIRtoID, match_str='*.xml', verbose
             for xml_file in xmllist:
                 parentid = dict_DIRtoID[d]
                 data_title = get_title_from_data(xml_file) # get title from XML
-                data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title
+                data_item = find_or_create_child(sb, parentid, data_title, verbose=verbose) # Create (or find) data page based on title  #Call 2 PJB
                 sb.replace_file(xml_file, data_item)
                 print("REPLACED: {}".format(os.path.basename(xml_file)))
     return
@@ -576,8 +582,13 @@ def upload_files_matching_xml(sb, item, xml_file, max_MBsize=2000, replace=True,
 		# Remove all files (and facets) from child page
 		item = remove_all_files(sb, item, verbose)
 	# List all files matching XML
-	dataname = xml_file.split('.')[0]
-	dataname = dataname.split('_meta')[0]
+	
+	dataname = xml_file.rsplit('\\', 1)[0] #PJB - loads all files in directory
+	dataname = dataname + '\*.' #PJB - loads all files in directory
+	
+	#dataname = xml_file.split('.')[0] #original that loads files based on XML prefix
+	#dataname = dataname.split('_meta')[0] #original that loads files based on XML prefix
+	
 	# up_files = glob.glob(searchstr)
 	up_files = [fn for fn in glob.iglob(dataname + '*')
 				if not fn.endswith('_orig') and not os.path.isdir(fn)]
@@ -724,7 +735,7 @@ def shp_to_new_child(sb, xml_file, parent, dr_doi=False, inheritedfields=False, 
 		dr_doi = get_DOI_from_item(parent_item)
 	# Create (or find) new child page based on data title
 	child_title = get_title_from_data(xml_file)
-	child_item = find_or_create_child(sb, parentid, child_title, verbose=True)
+	child_item = find_or_create_child(sb, parentid, child_title, verbose=True) # Call 3 PJB
 	# Update XML file to include new child ID and DOI
 	update_xml(xml_file, child_item['id'],dr_doi,parent_link) #if metadata.findall(formname_tagpath)[0].text == 'Shapefile':
 	# Upload shapefile files (including xml)
