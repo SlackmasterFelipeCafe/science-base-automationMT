@@ -31,6 +31,7 @@ It is also possible for the script to automatically create the SB page from an X
 ### 3. Modify parameters.
 
 Open config_autoSB.py in your Python/text editor and revise the value of each input variable as indicated in the comments.
+Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
 
 - Input variables that must be updated before running:
 	- useremail (SB username)
