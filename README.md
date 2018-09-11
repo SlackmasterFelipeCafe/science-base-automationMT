@@ -4,7 +4,7 @@
 
 ```
 Cloned from:
-- GitHub user: esturdivant-usgs (https://github.com/esturdivant-usgs) 
+- GitHub user, esturdivant-usgs (https://github.com/esturdivant-usgs) 
 - GitHub repository, science-base-automation (https://github.com/esturdivant-usgs/science-base-automation)
 ```
 
