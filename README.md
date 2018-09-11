@@ -4,7 +4,6 @@ Cloned from user esturdivant-usgs (https://github.com/esturdivant-usgs) science-
 
 ###Modified by Phil Brown to handle batch MT Data Uploads
 - **autoSB.py** Modified by Phil Brown, pbrown@usgs.gov 04/19/2018 to upload ALL files in a directory and only have one child per record
-- Last Modified 9/11
 
 __Automatically create and populate ScienceBase pages with metadata and data files.__ Given a ScienceBase (SB) landing page and a directory tree with data and metadata, this script creates SB pages mimicking the directory structure, updates the XML files with new SB links, and populates the SB pages from the data.
 
