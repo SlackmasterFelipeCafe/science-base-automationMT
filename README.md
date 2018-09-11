@@ -196,3 +196,5 @@ If a facet was created, a URL for direct download of the all files in the facets
 	parentdir = r'/Volumes/myserverfolder/data_release'
 
 - Although not necessary, you can use find_and_replace variable in config_autoSB.py to replace text in the XML based on placeholder values. The default configuration will search for the strings https://doi.org/XXXXX and DOI:XXXXX and replace the X's with the input DOI value. Note those are __five__ capital X's. 
+
+Modified 9/11
